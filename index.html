@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pennsylvania Trip</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+    }
+
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 3.4rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+    }
+
+    .hero .subtitle {
+      font-size: 1.15rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero .dates {
+      font-size: 0.95rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .travelers {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin: 2.5rem auto 2.5rem;
+      max-width: 700px;
+    }
+
+    .traveler {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .traveler-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: white;
+    }
+
+    .traveler-name {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+      max-width: 800px;
+      margin: 0 auto 3.5rem;
+      padding: 1.25rem 2rem;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.7rem;
+      color: var(--accent);
+      line-height: 1.2;
+    }
+
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      max-width: 800px;
+      margin: 0 auto 4rem;
+      padding: 0 2rem;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    }
+
+    .card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      font-weight: 400;
+      margin-bottom: 0.3rem;
+    }
+
+    .card p {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .home-footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      .hero {
+        padding: 3rem 1.25rem 2rem;
+      }
+
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+
+      .hero .subtitle {
+        font-size: 1rem;
+      }
+
+      .travelers {
+        gap: 1rem;
+        margin: 1.5rem auto 1.5rem;
+      }
+
+      .stats {
+        gap: 1.5rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-value {
+        font-size: 1.4rem;
+      }
+
+      .cards {
+        padding: 0 1.25rem;
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="index.html">Pennsylvania Trip</a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="timeline.html">Timeline</a></li>
+      <li><a href="map.html">Map</a></li>
+    </ul>
+  </nav>
+
+  <div class="hero">
+    <h1>Pennsylvania Trip</h1>
+    <div class="subtitle">Pine Creek Gorge &middot; PA Grand Canyon</div>
+    <div class="dates">October 15 &ndash; 18, 2026</div>
+  </div>
+
+  <div class="travelers">
+    <div class="traveler">
+      <div class="traveler-avatar" style="background: var(--accent);">N</div>
+      <div class="traveler-name">Noah</div>
+    </div>
+    <div class="traveler">
+      <div class="traveler-avatar" style="background: var(--rust);">A</div>
+      <div class="traveler-name">Andy</div>
+    </div>
+    <div class="traveler">
+      <div class="traveler-avatar" style="background: var(--gold);">N</div>
+      <div class="traveler-name">Nico</div>
+    </div>
+    <div class="traveler">
+      <div class="traveler-avatar" style="background: var(--slate);">D</div>
+      <div class="traveler-name">Dad</div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Days riding</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">~83 mi</div>
+      <div class="stat-label">Total distance</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">~3,500 ft</div>
+      <div class="stat-label">Elevation gain</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Nights booked</div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <a class="card" href="timeline.html">
+      <div class="card-icon">&#9716;</div>
+      <h2>Timeline</h2>
+      <p>Day-by-day schedule of drives, rides, and stays.</p>
+    </a>
+    <a class="card" href="map.html">
+      <div class="card-icon">&#9873;</div>
+      <h2>Map</h2>
+      <p>Interactive map with the route split by day, Airbnbs, and points of interest.</p>
+    </a>
+  </div>
+
+  <div class="home-footer">
+    Last updated: Sep 2026
+  </div>
+</body>
+</html>

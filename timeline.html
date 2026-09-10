@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timeline — Pennsylvania Trip</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.everyone { background: var(--accent); }
+    .legend-dot.travel { background: var(--slate); }
+    .legend-dot.optional { background: var(--gold); }
+
+    .day {
+      margin-bottom: 2rem;
+      position: relative;
+    }
+
+    .day-header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .day-date {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.5rem;
+      white-space: nowrap;
+    }
+
+    .day-label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .day-stats {
+      margin-left: auto;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .events {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      padding-left: 1.5rem;
+      border-left: 2px solid var(--border);
+    }
+
+    .event {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .event::before {
+      content: '';
+      position: absolute;
+      left: -1.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--bg);
+    }
+
+    .event.everyone::before { background: var(--accent); border-color: var(--accent); }
+    .event.travel::before { background: var(--slate); border-color: var(--slate); }
+    .event.optional::before { background: var(--gold); border-color: var(--gold); }
+
+    .event.optional { border-style: dashed; }
+
+    .event-time {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      min-width: 55px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .event-body { flex: 1; }
+
+    .event-title {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .event-detail {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .event-detail a { color: var(--accent); }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+
+    .tag.drive { background: var(--slate-light); color: var(--slate); }
+    .tag.stay { background: var(--accent-light); color: var(--accent); }
+    .tag.bike { background: var(--rust-light); color: var(--rust); }
+    .tag.optional { background: var(--gold-light); color: var(--gold); }
+    .tag.tbd { background: #f0efea; color: #999; }
+
+    .day-banner {
+      padding: 1rem 1.5rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-left: 1.5rem;
+      border-left: 3px solid var(--accent);
+    }
+
+    .day-banner .banner-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .day-banner .banner-detail {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .open-items {
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .open-items h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      font-weight: 400;
+      margin-bottom: 0.75rem;
+    }
+
+    .open-items ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .open-items li {
+      padding: 0.4rem 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .open-items li::before {
+      content: '\25CB\0020';
+      color: var(--border);
+    }
+
+    .note {
+      font-size: 0.8rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 0.75rem;
+    }
+
+    @media (max-width: 600px) {
+      .legend {
+        gap: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .day-header {
+        flex-direction: column;
+        gap: 0.15rem;
+      }
+
+      .day-date {
+        font-size: 1.25rem;
+      }
+
+      .day-stats {
+        margin-left: 0;
+      }
+
+      .events {
+        padding-left: 1rem;
+      }
+
+      .event {
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.6rem 0.75rem;
+      }
+
+      .event::before {
+        left: -1.35rem;
+        width: 8px;
+        height: 8px;
+      }
+
+      .event-time {
+        min-width: auto;
+        font-size: 0.78rem;
+      }
+
+      .event-title {
+        font-size: 0.88rem;
+      }
+
+      .tag {
+        font-size: 0.62rem;
+        padding: 0.1rem 0.4rem;
+        margin-left: 0.3rem;
+      }
+
+      .day-banner {
+        margin-left: 1rem;
+        padding: 0.75rem 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="index.html">Pennsylvania Trip</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="timeline.html" class="active">Timeline</a></li>
+      <li><a href="map.html">Map</a></li>
+    </ul>
+  </nav>
+
+  <div class="page">
+    <div class="page-header">
+      <h1>Timeline</h1>
+      <div class="subtitle">October 2026 &middot; Pine Creek Gorge, Pennsylvania</div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot everyone"></div> Everyone</div>
+      <div class="legend-item"><div class="legend-dot travel"></div> Individual travel</div>
+      <div class="legend-item"><div class="legend-dot optional"></div> Optional</div>
+    </div>
+
+    <!-- Oct 15 -->
+    <div class="day">
+      <div class="day-header">
+        <div class="day-date">Thu, Oct 15</div>
+        <div class="day-label">Arrival day</div>
+        <div class="day-stats">No riding</div>
+      </div>
+      <div class="events">
+        <div class="event travel">
+          <div class="event-time">Day</div>
+          <div class="event-body">
+            <div class="event-title">Drive to Jersey Shore, PA <span class="tag drive">Drive</span></div>
+            <div class="event-detail">Everyone travels separately &middot; departure times TBD</div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time">14:00</div>
+          <div class="event-body">
+            <div class="event-title">Check in &mdash; Our Neck of the Woods <span class="tag stay">Stay</span></div>
+            <div class="event-detail">3171 Rauchtown Road, Jersey Shore, PA 17740 &middot; Hosted by Melanie &middot; Check-in 2:00 PM &middot; Checkout 11:00 AM &middot; 4 guests &middot; <em>Free cancellation before 2:00 PM Oct 14</em></div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time">PM</div>
+          <div class="event-body">
+            <div class="event-title">Everyone meets up <span class="tag tbd">TBD</span></div>
+            <div class="event-detail">Dinner &amp; bike prep &middot; plans to come</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Oct 16 -->
+    <div class="day">
+      <div class="day-header">
+        <div class="day-date">Fri, Oct 16</div>
+        <div class="day-label">Ride Day 1 &mdash; Jersey Shore to Morris</div>
+        <div class="day-stats">~40.7 mi &middot; ~2,750 ft</div>
+      </div>
+      <div class="events">
+        <div class="event everyone">
+          <div class="event-time">11:00</div>
+          <div class="event-body">
+            <div class="event-title">Checkout &mdash; Our Neck of the Woods <span class="tag stay">Stay</span></div>
+            <div class="event-detail">Checkout by 11:00 AM</div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time">AM</div>
+          <div class="event-body">
+            <div class="event-title">Park cars in Jersey Shore <span class="tag drive">Drive</span></div>
+            <div class="event-detail">Pine Creek Rail Trail southern trailhead &middot; 41.20199, &minus;77.27838 &middot; exact parking spot TBD &middot; cars stay here until Sunday</div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time"></div>
+          <div class="event-body">
+            <div class="event-title">Ride &mdash; Day 1 <span class="tag bike">Ride</span></div>
+            <div class="event-detail">Jersey Shore &rarr; Morris &middot; ~40.7 mi &middot; ~2,750 ft gain &middot; the big climbing day: up over the plateau to ~1,975 ft around mile 28, then down to Blackwell and east to Morris &middot; <a href="https://ridewithgps.com/routes/57094763" target="_blank">RideWithGPS</a></div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time">15:00</div>
+          <div class="event-body">
+            <div class="event-title">Check in &mdash; Sweet Side Cottage <span class="tag stay">Stay</span></div>
+            <div class="event-detail">1708 PA-287, Morris, PA 16938 &middot; Hosted by Jennifer &middot; Cheery 2-bedroom cottage &middot; Check-in 3:00 PM &middot; Checkout 11:00 AM &middot; 4 guests &middot; <em>Free cancellation before 3:00 PM Oct 11</em></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Oct 17 -->
+    <div class="day">
+      <div class="day-header">
+        <div class="day-date">Sat, Oct 17</div>
+        <div class="day-label">Ride Day 2 &mdash; Morris to Ramsey Drive</div>
+        <div class="day-stats">~34.0 mi &middot; ~550 ft</div>
+      </div>
+      <div class="events">
+        <div class="event everyone">
+          <div class="event-time">11:00</div>
+          <div class="event-body">
+            <div class="event-title">Checkout &mdash; Sweet Side Cottage <span class="tag stay">Stay</span></div>
+            <div class="event-detail">Checkout by 11:00 AM</div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time"></div>
+          <div class="event-body">
+            <div class="event-title">Ride &mdash; Day 2 <span class="tag bike">Ride</span></div>
+            <div class="event-detail">Morris &rarr; Blackwell &rarr; south down the Pine Creek Rail Trail through the gorge &middot; ~34.0 mi &middot; ~550 ft gain &middot; almost entirely flat crushed-limestone rail trail, gently downhill all day</div>
+          </div>
+        </div>
+        <div class="event optional">
+          <div class="event-time">+</div>
+          <div class="event-body">
+            <div class="event-title">Optional: add distance <span class="tag optional">Optional</span></div>
+            <div class="event-detail">
+              The short, flat middle day is the natural place to add miles. Options, all on the rail trail:<br>
+              &bull; <strong>North from Blackwell</strong> toward Rattlesnake Rock / Tiadaghton &mdash; out-and-back, ~+2 mi per mile out<br>
+              &bull; <strong>Ride past the Ramsey Drive turnoff</strong> toward Jersey Shore and double back &mdash; up to ~+17 mi<br>
+              &bull; <strong>Side spurs</strong> at Cedar Run (mile 44.7 of the loop) or Slate Run<br>
+              <em>Pick on the day &mdash; specifics TBD</em>
+            </div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time">16:00</div>
+          <div class="event-body">
+            <div class="event-title">Check in &mdash; Happy Mountain Camp <span class="tag stay">Stay</span></div>
+            <div class="event-detail">271 Ramsey Drive, Jersey Shore, PA 17740 &middot; Hosted by Becky Allgyer &middot; Keypad self check-in &middot; Check-in 4:00 PM &middot; Checkout 11:00 AM &middot; 4 guests &middot; on-site parking &middot; <em>Free cancellation before 4:00 PM Oct 12</em></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Oct 18 -->
+    <div class="day">
+      <div class="day-header">
+        <div class="day-date">Sun, Oct 18</div>
+        <div class="day-label">Ride Day 3 &mdash; back to the cars</div>
+        <div class="day-stats">~8.4 mi &middot; ~200 ft</div>
+      </div>
+      <div class="events">
+        <div class="event everyone">
+          <div class="event-time"></div>
+          <div class="event-body">
+            <div class="event-title">Ride &mdash; Day 3 <span class="tag bike">Ride</span></div>
+            <div class="event-detail">Ramsey Drive &rarr; Jersey Shore &middot; ~8.4 mi &middot; ~200 ft gain &middot; flat rail trail back to the cars</div>
+          </div>
+        </div>
+        <div class="event everyone">
+          <div class="event-time">11:00</div>
+          <div class="event-body">
+            <div class="event-title">Checkout &mdash; Happy Mountain Camp <span class="tag stay">Stay</span></div>
+            <div class="event-detail">Checkout by 11:00 AM &mdash; ride out before or after, it is a short day either way</div>
+          </div>
+        </div>
+        <div class="event travel">
+          <div class="event-time">Day</div>
+          <div class="event-body">
+            <div class="event-title">Load up and drive home <span class="tag drive">Drive</span></div>
+            <div class="event-detail">Everyone departs separately from Jersey Shore</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="day-banner">
+      <div class="banner-title">Trip totals</div>
+      <div class="banner-detail">~83 miles of riding over three days &middot; ~3,500 ft of climbing, nearly all of it on Friday &middot; the full RideWithGPS loop is 76.97 mi / 3,293 ft, plus ~6.2 mi of out-and-back on PA-414/287 to reach the Morris cottage.</div>
+    </div>
+
+    <div class="open-items">
+      <h2>Open Items</h2>
+      <ul>
+        <li>Departure times &amp; carpools for Thursday's drive</li>
+        <li>Exact parking spot in Jersey Shore (needs to allow 3 nights)</li>
+        <li>Points of interest &mdash; stops, food, swimming holes, overlooks</li>
+        <li>Saturday's optional add-on mileage &mdash; decide on the day</li>
+        <li>Meals &amp; resupply: Morris and the gorge are remote, plan groceries Thursday</li>
+        <li>Bikes &amp; gear &mdash; who is bringing what</li>
+      </ul>
+      <div class="note">
+        Distances and elevation are calculated from the GPX track; the Morris connector is road-routed from the route's turnaround to the cottage. See the README for method.
+      </div>
+    </div>
+
+    <div class="page-footer">
+      Last updated: Sep 2026
+    </div>
+  </div>
+</body>
+</html>

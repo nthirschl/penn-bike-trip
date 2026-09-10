@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map — Pennsylvania Trip</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body { overflow: hidden; }
+
+    .map-layout {
+      display: flex;
+      height: calc(100vh - 56px);
+    }
+
+    .sidebar {
+      width: 340px;
+      min-width: 340px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 1.5rem;
+    }
+
+    .sidebar h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar .subtitle {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar h2 {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+      margin-top: 1.25rem;
+    }
+
+    .sidebar h2:first-of-type { margin-top: 0; }
+
+    .place {
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.35rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      border: 1px solid transparent;
+    }
+
+    .place:hover {
+      background: var(--bg);
+      border-color: var(--border);
+    }
+
+    .place-name {
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .place-detail {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .place-detail a { color: var(--accent); }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0.4rem;
+      vertical-align: middle;
+    }
+
+    .dot.accommodation { background: var(--accent); }
+    .dot.poi { background: var(--rust); }
+    .dot.parking { background: var(--slate); }
+    .dot.day1 { background: #b4551f; }
+    .dot.day2 { background: #2e6b4a; }
+    .dot.day3 { background: #566d7d; }
+    .dot.connector { background: #9c7a16; }
+
+    .route-stats {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .legend-bar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .legend-bar span {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    #map {
+      flex: 1;
+      min-height: 100%;
+    }
+
+    .custom-popup .leaflet-popup-content-wrapper {
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .popup-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .popup-detail {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .popup-detail a { color: var(--accent); }
+
+    .no-places-msg {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: #faf8f2;
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .sidebar-toggle {
+      display: none;
+    }
+
+    @media (max-width: 600px) {
+      .map-layout {
+        flex-direction: column;
+        height: calc(100vh - 44px);
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 44px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        min-width: 0;
+        z-index: 900;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        border-right: none;
+        border-top: 1px solid var(--border);
+        padding: 1rem;
+      }
+
+      .sidebar.open {
+        transform: translateY(0);
+      }
+
+      .sidebar-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 950;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 0.5rem 1.1rem;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text);
+        cursor: pointer;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+      }
+
+      #map {
+        height: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a class="nav-brand" href="index.html">Pennsylvania Trip</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="timeline.html">Timeline</a></li>
+      <li><a href="map.html" class="active">Map</a></li>
+    </ul>
+  </nav>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">&#9776; Places</button>
+
+  <div class="map-layout">
+    <div class="sidebar" id="sidebar">
+      <h1>Map</h1>
+      <div class="subtitle">Route by day, Airbnbs &amp; points of interest</div>
+
+      <div class="legend-bar">
+        <span><span class="dot accommodation"></span> Accommodation</span>
+        <span><span class="dot parking"></span> Parking</span>
+        <span><span class="dot poi"></span> Point of interest</span>
+      </div>
+
+      <h2>Bike Route</h2>
+      <div class="place" onclick="fitRoute('day1')">
+        <div class="place-name"><span class="dot day1"></span>Day 1 &mdash; Fri, Oct 16</div>
+        <div class="place-detail">Jersey Shore &rarr; Morris</div>
+        <div class="route-stats">~40.7 mi &middot; ~2,750 ft gain</div>
+      </div>
+      <div class="place" onclick="fitRoute('day2')">
+        <div class="place-name"><span class="dot day2"></span>Day 2 &mdash; Sat, Oct 17</div>
+        <div class="place-detail">Morris &rarr; Ramsey Drive &middot; optional add-ons</div>
+        <div class="route-stats">~34.0 mi &middot; ~550 ft gain</div>
+      </div>
+      <div class="place" onclick="fitRoute('day3')">
+        <div class="place-name"><span class="dot day3"></span>Day 3 &mdash; Sun, Oct 18</div>
+        <div class="place-detail">Ramsey Drive &rarr; Jersey Shore (the cars)</div>
+        <div class="route-stats">~8.4 mi &middot; ~200 ft gain</div>
+      </div>
+      <div class="place" onclick="fitRoute('connector')">
+        <div class="place-name"><span class="dot connector"></span>Morris connector</div>
+        <div class="place-detail">Route turnaround &harr; Sweet Side Cottage, on PA-414/287</div>
+        <div class="route-stats">3.1 mi each way &middot; ridden Fri out, Sat back</div>
+      </div>
+      <div class="place" onclick="fitRoute('full')">
+        <div class="place-name"><span class="dot poi"></span>Full loop (original GPX)</div>
+        <div class="place-detail"><a href="https://ridewithgps.com/routes/57094763" target="_blank">RideWithGPS</a></div>
+        <div class="route-stats">76.97 mi &middot; 3,293 ft gain</div>
+      </div>
+
+      <h2>Accommodations</h2>
+      <div class="place" onclick="flyTo(41.128009, -77.234998, 14)">
+        <div class="place-name"><span class="dot accommodation"></span>Our Neck of the Woods</div>
+        <div class="place-detail">Night 1 &middot; Thu Oct 15 &middot; 3171 Rauchtown Road, Jersey Shore &middot; check-in 2:00 PM</div>
+      </div>
+      <div class="place" onclick="flyTo(41.587032, -77.298636, 14)">
+        <div class="place-name"><span class="dot accommodation"></span>Sweet Side Cottage</div>
+        <div class="place-detail">Night 2 &middot; Fri Oct 16 &middot; 1708 PA-287, Morris &middot; check-in 3:00 PM</div>
+      </div>
+      <div class="place" onclick="flyTo(41.283090, -77.328232, 14)">
+        <div class="place-name"><span class="dot accommodation"></span>Happy Mountain Camp</div>
+        <div class="place-detail">Night 3 &middot; Sat Oct 17 &middot; 271 Ramsey Drive, Jersey Shore &middot; check-in 4:00 PM</div>
+      </div>
+
+      <h2>Parking</h2>
+      <div class="place" onclick="flyTo(41.20199, -77.27838, 15)">
+        <div class="place-name"><span class="dot parking"></span>Jersey Shore trailhead</div>
+        <div class="place-detail">Route start/finish &middot; Pine Creek Rail Trail &middot; exact spot TBD</div>
+      </div>
+
+      <h2>Points of Interest</h2>
+      <div class="place" onclick="flyTo(41.527229, -77.446777, 14)">
+        <div class="place-name"><span class="dot poi"></span>Cedar Run Campground</div>
+        <div class="place-detail">On route, Day 2 &middot; primitive tent sites, $45/night &middot; <em>from the GPX waypoints</em></div>
+      </div>
+      <div class="place" onclick="flyTo(41.50926, -77.30353, 14)">
+        <div class="place-name"><span class="dot poi"></span>High point &mdash; 1,975 ft</div>
+        <div class="place-detail">Day 1, around mile 28.6 &middot; top of the climb</div>
+      </div>
+      <div class="no-places-msg">
+        More points of interest to come &mdash; stops, food, overlooks, swimming holes.
+      </div>
+    </div>
+
+    <div id="map"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.js"></script>
+  <script>
+    // ── Map init ──
+    const map = L.map('map', {
+      zoomControl: true,
+    }).setView([41.38, -77.37], 10);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // ── Custom icon factory ──
+    function makeIcon(color) {
+      return L.divIcon({
+        className: '',
+        html: `<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg">
+          <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 22 14 22s14-11.5 14-22C28 6.27 21.73 0 14 0z" fill="${color}"/>
+          <circle cx="14" cy="13" r="5.5" fill="white"/>
+        </svg>`,
+        iconSize: [28, 36],
+        iconAnchor: [14, 36],
+        popupAnchor: [0, -36],
+      });
+    }
+
+    const icons = {
+      accommodation: makeIcon('#2e6b4a'),
+      parking: makeIcon('#566d7d'),
+      poi: makeIcon('#b4551f'),
+    };
+
+    // ── Markers ──
+    const places = [
+      {
+        name: "Our Neck of the Woods",
+        detail: "Night 1 &middot; Thu Oct 15<br>3171 Rauchtown Road, Jersey Shore, PA 17740<br>Hosted by Melanie &middot; 4 guests<br>Check-in 2:00 PM &middot; Checkout 11:00 AM<br><em>Free cancellation before 2:00 PM Oct 14</em>",
+        lat: 41.128009, lng: -77.234998,
+        type: 'accommodation',
+      },
+      {
+        name: "Sweet Side Cottage",
+        detail: "Night 2 &middot; Fri Oct 16<br>1708 PA-287, Morris, PA 16938<br>Hosted by Jennifer &middot; 4 guests<br>Check-in 3:00 PM &middot; Checkout 11:00 AM<br><em>Free cancellation before 3:00 PM Oct 11</em>",
+        lat: 41.587032, lng: -77.298636,
+        type: 'accommodation',
+      },
+      {
+        name: "Happy Mountain Camp",
+        detail: "Night 3 &middot; Sat Oct 17<br>271 Ramsey Drive, Jersey Shore, PA 17740<br>Hosted by Becky Allgyer &middot; 4 guests<br>Keypad self check-in &middot; on-site parking<br>Check-in 4:00 PM &middot; Checkout 11:00 AM<br><em>Free cancellation before 4:00 PM Oct 12</em>",
+        lat: 41.283090, lng: -77.328232,
+        type: 'accommodation',
+      },
+      {
+        name: "Jersey Shore trailhead",
+        detail: "Park here Friday morning &middot; cars stay until Sunday<br>Pine Creek Rail Trail southern end<br>41.20199, &minus;77.27838<br><em>Exact parking spot TBD</em>",
+        lat: 41.20199, lng: -77.27838,
+        type: 'parking',
+      },
+      {
+        name: "Cedar Run Campground",
+        detail: "On route, Day 2 &middot; mile 44.7 of the loop<br>Private resort-style campground with primitive tent sites, $45/night<br><em>From the GPX waypoints</em>",
+        lat: 41.527229, lng: -77.446777,
+        type: 'poi',
+      },
+      {
+        name: "High point &mdash; 1,975 ft",
+        detail: "Day 1, around mile 28.6<br>Top of the plateau climb out of Jersey Shore, before the descent to Blackwell",
+        lat: 41.50926, lng: -77.30353,
+        type: 'poi',
+      },
+    ];
+
+    places.forEach(p => {
+      L.marker([p.lat, p.lng], { icon: icons[p.type] })
+        .addTo(map)
+        .bindPopup(
+          `<div class="popup-title">${p.name}</div><div class="popup-detail">${p.detail}</div>`,
+          { className: 'custom-popup', maxWidth: 260 }
+        );
+    });
+
+    // ── Fit all markers (initial view) ──
+    const bounds = L.latLngBounds(places.map(p => [p.lat, p.lng]));
+    map.fitBounds(bounds, { padding: [60, 60] });
+
+    // ── GPX Routes ──
+    const routes = {};
+
+    function loadGPX(id, url, color, dashed) {
+      const gpxLayer = new L.GPX(url, {
+        async: true,
+        polyline_options: {
+          color: color,
+          weight: dashed ? 3 : 4,
+          opacity: 0.85,
+          lineCap: 'round',
+          dashArray: dashed ? '6 6' : null,
+        },
+        marker_options: {
+          startIconUrl: null,
+          endIconUrl: null,
+          shadowUrl: null,
+          wptIconUrls: { '': null },
+        },
+      });
+
+      gpxLayer.on('loaded', function(e) {
+        routes[id] = e.target;
+      });
+
+      gpxLayer.addTo(map);
+      return gpxLayer;
+    }
+
+    const cacheBust = '?v=' + Date.now();
+    loadGPX('day1', 'bike-route/PA_Day_1.gpx' + cacheBust, '#b4551f');
+    loadGPX('day2', 'bike-route/PA_Day_2.gpx' + cacheBust, '#2e6b4a');
+    loadGPX('day3', 'bike-route/PA_Day_3.gpx' + cacheBust, '#566d7d');
+    loadGPX('connector', 'bike-route/PA_Morris_Connector.gpx' + cacheBust, '#9c7a16', true);
+
+    // Full loop is available for reference but not drawn (it duplicates the day layers).
+    function fitRoute(id) {
+      if (id === 'full') {
+        const all = ['day1', 'day2', 'day3', 'connector']
+          .filter(k => routes[k])
+          .map(k => routes[k].getBounds());
+        if (all.length) {
+          let b = all[0];
+          all.slice(1).forEach(x => { b = b.extend(x); });
+          map.fitBounds(b, { padding: [60, 60] });
+        }
+        closeSidebar();
+        return;
+      }
+      if (routes[id]) {
+        map.fitBounds(routes[id].getBounds(), { padding: [60, 60] });
+        closeSidebar();
+      }
+    }
+
+    // ── Sidebar fly-to ──
+    function flyTo(lat, lng, zoom) {
+      map.flyTo([lat, lng], zoom, { duration: 1 });
+      closeSidebar();
+    }
+
+    // ── Mobile sidebar toggle ──
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+    }
+  </script>
+</body>
+</html>
