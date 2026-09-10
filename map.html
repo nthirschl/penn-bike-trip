@@ -64,6 +64,19 @@
       border-color: var(--border);
     }
 
+    .place.active {
+      background: var(--bg);
+      border-color: var(--accent);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    .route-hint {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-style: italic;
+      margin: 0.5rem 0 0.25rem 0.75rem;
+    }
+
     .place-name {
       font-weight: 500;
       font-size: 0.9rem;
@@ -89,8 +102,11 @@
     .dot.poi { background: var(--rust); }
     .dot.parking { background: var(--slate); }
     .dot.day1 { background: #d1471f; }
-    .dot.day2 { background: #7b2d8e; }
-    .dot.day3 { background: #17497a; }
+    .dot.day2 { background: #111111; }
+    .dot.day3 { background: #0d5bd1; }
+    .dot.all {
+      background: linear-gradient(135deg, #d1471f 0 33%, #111111 33% 66%, #0d5bd1 66% 100%);
+    }
 
     .route-stats {
       font-size: 0.78rem;
@@ -228,26 +244,27 @@
       </div>
 
       <h2>Bike Route</h2>
-      <div class="place" onclick="fitRoute('day1')">
+      <div class="place" data-day="day1" onclick="selectDay('day1')">
         <div class="place-name"><span class="dot day1"></span>Day 1 &mdash; Fri, Oct 16</div>
         <div class="place-detail">Jersey Shore &rarr; Morris, ending at the cottage</div>
         <div class="route-stats">~40.7 mi &middot; ~2,750 ft gain</div>
       </div>
-      <div class="place" onclick="fitRoute('day2')">
+      <div class="place" data-day="day2" onclick="selectDay('day2')">
         <div class="place-name"><span class="dot day2"></span>Day 2 &mdash; Sat, Oct 17</div>
         <div class="place-detail">Morris &rarr; Ramsey Drive &middot; optional add-ons</div>
         <div class="route-stats">~34.0 mi &middot; ~550 ft gain</div>
       </div>
-      <div class="place" onclick="fitRoute('day3')">
+      <div class="place" data-day="day3" onclick="selectDay('day3')">
         <div class="place-name"><span class="dot day3"></span>Day 3 &mdash; Sun, Oct 18</div>
         <div class="place-detail">Ramsey Drive &rarr; Jersey Shore (the cars)</div>
         <div class="route-stats">~8.4 mi &middot; ~200 ft gain</div>
       </div>
-      <div class="place" onclick="fitRoute('full')">
-        <div class="place-name"><span class="dot poi"></span>Whole trip</div>
+      <div class="place" data-day="" onclick="showAll()">
+        <div class="place-name"><span class="dot all"></span>Whole trip</div>
         <div class="place-detail">All three days &middot; <a href="https://ridewithgps.com/routes/57094763" target="_blank">RideWithGPS</a></div>
         <div class="route-stats">~83 mi &middot; ~3,500 ft gain</div>
       </div>
+      <div class="route-hint">Tap a day to bring it forward &mdash; tap again to show all three.</div>
 
       <h2>Accommodations</h2>
       <div class="place" onclick="flyTo(41.128009, -77.234998, 14)">
@@ -270,16 +287,8 @@
       </div>
 
       <h2>Points of Interest</h2>
-      <div class="place" onclick="flyTo(41.527229, -77.446777, 14)">
-        <div class="place-name"><span class="dot poi"></span>Cedar Run Campground</div>
-        <div class="place-detail">On route, Day 2 &middot; primitive tent sites, $45/night &middot; <em>from the GPX waypoints</em></div>
-      </div>
-      <div class="place" onclick="flyTo(41.50926, -77.30353, 14)">
-        <div class="place-name"><span class="dot poi"></span>High point &mdash; 1,975 ft</div>
-        <div class="place-detail">Day 1, around mile 28.6 &middot; top of the climb</div>
-      </div>
       <div class="no-places-msg">
-        More points of interest to come &mdash; stops, food, overlooks, swimming holes.
+        No points of interest added yet &mdash; stops, food, overlooks, swimming holes to come.
       </div>
     </div>
 
@@ -288,6 +297,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.js"></script>
+  <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
   <script>
     // ── Map init ──
     const map = L.map('map', {
@@ -372,18 +382,6 @@
         lat: 41.20199, lng: -77.27838,
         type: 'parking',
       },
-      {
-        name: "Cedar Run Campground",
-        detail: "On route, Day 2 &middot; mile 44.7 of the loop<br>Private resort-style campground with primitive tent sites, $45/night<br><em>From the GPX waypoints</em>",
-        lat: 41.527229, lng: -77.446777,
-        type: 'poi',
-      },
-      {
-        name: "High point &mdash; 1,975 ft",
-        detail: "Day 1, around mile 28.6<br>Top of the plateau climb out of Jersey Shore, before the descent to Blackwell",
-        lat: 41.50926, lng: -77.30353,
-        type: 'poi',
-      },
     ];
 
     places.forEach(p => {
@@ -402,6 +400,27 @@
     // ── GPX Routes ──
     const routes = {};
 
+    // Each day's track is self-contained: day 1 ends at the Morris cottage and
+    // day 2 starts there, so the PA-414/287 connector is part of both rides.
+    // The days also overlap on the ground — day 3 retraces day 1's first miles
+    // of rail trail — so all three are drawn muted and the selected one is
+    // brought forward at full strength.
+    // Colours are picked against the CyclOSM basemap, which already draws
+    // national cycle routes in purple, forest in green and water in pale blue.
+    const DAYS = {
+      day1: { file: 'PA_Day_1.gpx', color: '#d1471f' },
+      day2: { file: 'PA_Day_2.gpx', color: '#111111' },
+      day3: { file: 'PA_Day_3.gpx', color: '#0d5bd1' },
+    };
+
+    const STYLES = {
+      muted:  { weight: 4,   casing: 0.6,  line: 0.75, arrow: 0.85, arrowSize: 6 },
+      dimmed: { weight: 2.5, casing: 0.18, line: 0.18, arrow: 0.2,  arrowSize: 5 },
+      active: { weight: 6,   casing: 0.95, line: 1,    arrow: 1,    arrowSize: 8 },
+    };
+
+    let selectedDay = null;
+
     // Walk a nested layer group and collect every polyline in it.
     function collectPolylines(layer, out) {
       if (layer instanceof L.Polyline) out.push(layer);
@@ -409,17 +428,41 @@
       return out;
     }
 
-    function loadGPX(id, url, color, dashed) {
-      const gpxLayer = new L.GPX(url, {
+    // White chevrons, not filled triangles in the route colour — an arrowhead
+    // the same colour as the line it sits on is invisible. Rebuilt rather than
+    // restyled: the decorator redraws its symbols from the pattern on every
+    // zoom, which would discard setStyle.
+    function arrowPattern(opacity, size) {
+      return [{
+        offset: 28,
+        repeat: 95,
+        symbol: L.Symbol.arrowHead({
+          pixelSize: size,
+          polygon: false,
+          pathOptions: {
+            pane: 'routes',
+            stroke: true,
+            color: '#ffffff',
+            weight: 2,
+            opacity: opacity,
+            lineCap: 'round',
+            fill: false,
+          },
+        }),
+      }];
+    }
+
+    function loadGPX(id) {
+      const cfg = DAYS[id];
+      const gpxLayer = new L.GPX('bike-route/' + cfg.file + cacheBust, {
         async: true,
         polyline_options: {
           pane: 'routes',
-          color: color,
-          weight: dashed ? 3 : 4,
-          opacity: 1,
+          color: cfg.color,
+          weight: STYLES.muted.weight,
+          opacity: STYLES.muted.line,
           lineCap: 'round',
           lineJoin: 'round',
-          dashArray: dashed ? '6 6' : null,
         },
         marker_options: {
           startIconUrl: null,
@@ -430,47 +473,71 @@
       });
 
       gpxLayer.on('loaded', function(e) {
-        routes[id] = e.target;
-        collectPolylines(e.target, []).forEach(line => {
-          L.polyline(line.getLatLngs(), {
+        const entry = { gpx: e.target, lines: [], casings: [], arrows: [] };
+        collectPolylines(e.target, entry.lines);
+        entry.lines.forEach(line => {
+          entry.casings.push(L.polyline(line.getLatLngs(), {
             pane: 'casing',
             color: '#ffffff',
-            weight: (dashed ? 3 : 4) + 3,
-            opacity: 0.9,
+            weight: STYLES.muted.weight + 3,
+            opacity: STYLES.muted.casing,
             lineCap: 'round',
             lineJoin: 'round',
-          }).addTo(map);
+          }).addTo(map));
+          entry.arrows.push(L.polylineDecorator(line, {
+            patterns: arrowPattern(STYLES.muted.arrow, STYLES.muted.arrowSize),
+          }).addTo(map));
         });
+        routes[id] = entry;
+        applyRouteStyles();
       });
 
       gpxLayer.addTo(map);
       return gpxLayer;
     }
 
-    const cacheBust = '?v=' + Date.now();
-    // Each day's track is self-contained: day 1 ends at the Morris cottage and
-    // day 2 starts there, so the PA-414/287 connector is part of both rides.
-    loadGPX('day1', 'bike-route/PA_Day_1.gpx' + cacheBust, '#d1471f');
-    loadGPX('day2', 'bike-route/PA_Day_2.gpx' + cacheBust, '#7b2d8e');
-    loadGPX('day3', 'bike-route/PA_Day_3.gpx' + cacheBust, '#17497a');
-
-    function fitRoute(id) {
-      if (id === 'full') {
-        const all = ['day1', 'day2', 'day3']
-          .filter(k => routes[k])
-          .map(k => routes[k].getBounds());
-        if (all.length) {
-          let b = all[0];
-          all.slice(1).forEach(x => { b = b.extend(x); });
-          map.fitBounds(b, { padding: [60, 60] });
+    function applyRouteStyles() {
+      Object.keys(routes).forEach(id => {
+        const entry = routes[id];
+        const s = selectedDay === null ? STYLES.muted
+                : selectedDay === id ? STYLES.active
+                : STYLES.dimmed;
+        entry.lines.forEach(l => l.setStyle({ weight: s.weight, opacity: s.line }));
+        entry.casings.forEach(c => c.setStyle({ weight: s.weight + 3, opacity: s.casing }));
+        entry.arrows.forEach(a => a.setPatterns(arrowPattern(s.arrow, s.arrowSize)));
+        if (selectedDay === id) {
+          entry.casings.forEach(c => c.bringToFront());
+          entry.lines.forEach(l => l.bringToFront());
+          entry.arrows.forEach(a => a.bringToFront());
         }
-        closeSidebar();
-        return;
+      });
+      document.querySelectorAll('.place[data-day]').forEach(el => {
+        el.classList.toggle('active', !!selectedDay && el.dataset.day === selectedDay);
+      });
+    }
+
+    const cacheBust = '?v=' + Date.now();
+    Object.keys(DAYS).forEach(loadGPX);
+
+    // Tapping the selected day again clears the selection.
+    function selectDay(id) {
+      selectedDay = (selectedDay === id) ? null : id;
+      applyRouteStyles();
+      const entry = routes[id];
+      if (entry) map.fitBounds(entry.gpx.getBounds(), { padding: [60, 60] });
+      closeSidebar();
+    }
+
+    function showAll() {
+      selectedDay = null;
+      applyRouteStyles();
+      const all = Object.keys(DAYS).filter(k => routes[k]).map(k => routes[k].gpx.getBounds());
+      if (all.length) {
+        let b = all[0];
+        all.slice(1).forEach(x => { b = b.extend(x); });
+        map.fitBounds(b, { padding: [60, 60] });
       }
-      if (routes[id]) {
-        map.fitBounds(routes[id].getBounds(), { padding: [60, 60] });
-        closeSidebar();
-      }
+      closeSidebar();
     }
 
     // ── Sidebar fly-to ──
