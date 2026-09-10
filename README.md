@@ -27,7 +27,7 @@ the Pine Creek Rail Trail — flat crushed limestone, gently downhill the whole 
 Day 2 is the short, flat day and the natural place to add mileage if we want it.
 
 ## Project Structure
-- `bike-route/` — GPX tracks: the original full loop plus per-day splits and the Morris connector
+- `bike-route/` — GPX tracks: the original full loop plus one ready-to-ride track per day
 - `accommodations/` — Airbnb booking PDFs and lodging details
 - `itineraries/` — Daily schedules and travel plans
 - `points-of-interest/` — Stops, food, overlooks, swimming holes
@@ -59,7 +59,8 @@ line is drawn over a white casing to keep it legible.
      leaving 8.4 mi back to the cars. That matches the "about 10 mi" estimate.
    - **Sweet Side Cottage** (Morris) is 2.9 mi beyond the route's northern turnaround at mile 37.6.
      Road-routed via OSRM, that connector is **3.1 mi** on PA-414/PA-287 — ridden out Friday and
-     back Saturday, so ~6.2 mi total on top of the loop.
+     back Saturday, so ~6.2 mi total on top of the loop. It is merged into the day 1 and day 2
+     tracks rather than kept separate, so each day's GPX runs door to door.
    - **Our Neck of the Woods** (Rauchtown Rd) is off-route to the south — Thursday night only,
      12.6 mi by road from the Jersey Shore trailhead.
 4. Elevation gain: the raw GPX sums to 4,837 ft, which is GPS noise. A 3 m threshold filter gives
