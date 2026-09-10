@@ -38,6 +38,18 @@ Day 2 is the short, flat day and the natural place to add mileage if we want it.
 - `map.html` — Interactive Leaflet map: route colored by day, Airbnbs, parking, POIs
 - `styles.css` — Shared theme
 
+### Basemaps
+Three keyless OSM-based tile layers, switchable from the control in the map's top-right:
+**Standard** (default), **Terrain** (OpenTopoMap, contours — good for seeing the gorge), and
+**Cycling** (CyclOSM, highlights the rail trail).
+
+No API key is needed, and none should be added: this is a public static site, so any key would
+sit in readable client-side JavaScript. CARTO's basemaps were used originally but now stamp
+"API KEY REQUIRED" across unauthenticated tiles.
+
+Because this corner of Tioga State Forest renders as solid green on every OSM style, each route
+line is drawn over a white casing to keep it legible.
+
 ## How the distances were calculated
 1. Parsed `bike-route/Hirschl_family_bike_ride_october__26.gpx` (3,888 track points) and computed
    cumulative haversine distance. Result: 76.89 mi, against RideWithGPS's official 76.97 mi.
